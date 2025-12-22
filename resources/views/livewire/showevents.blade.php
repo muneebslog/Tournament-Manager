@@ -1,12 +1,12 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\TournamentEvent;
+use App\Models\Event;
 
 new class extends Component {
     public $event;
     public $component;
-    public function mount(TournamentEvent $id)
+    public function mount(Event $id)
     {
         $this->event = $id;
     }
@@ -22,12 +22,12 @@ new class extends Component {
         <nav
             class="relative max-w-7xl w-full flex flex-wrap lg:grid lg:grid-cols-6 basis-full items-center px-4 md:px-6 lg:px-8 mx-auto">
             <div class="lg:col-span-3 flex gap-3 items-center">
-                <flux:avatar src="{{ Storage::url($event->logo) }}" />
+                <flux:avatar name="{{ $event->name }}" src="" />
 
                 <!-- Logo -->
                 <a class="flex-none rounded-xl capitalize text-xl inline-block font-semibold focus:outline-hidden focus:opacity-80"
                     aria-label="Preline">
-                    {{ $event->title }}
+                    {{ $event->name }}
                 </a>
                 <!-- End Logo -->
 

@@ -13,7 +13,7 @@ new class extends Component {
     public $events;
 
     public $event_id;
-    public $title;
+    public $name;
     public $logo; // file upload
     public $existing_logo; // path for preview
     public $tournament;
@@ -34,8 +34,8 @@ new class extends Component {
         $event = Event::find($eventId);
         if ($event) {
             $this->event_id = $event->id;
-            $this->title = $event->title;
-            $this->existing_logo = $event->logo;
+            $this->name = $event->name;
+            $this->existing_logo = $event->logo_path;
             Flux::modal('generateEvents')->show();
         }
 
@@ -44,7 +44,7 @@ new class extends Component {
     public function save()
     {
         $this->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'logo' => 'nullable|image|max:2048', // 2MB limit
         ]);
 
@@ -57,9 +57,9 @@ new class extends Component {
         Event::updateOrCreate(
             ['id' => $this->event_id],
             [
-                'title' => $this->title,
+                'name' => $this->name,
                 'tournament_id'=>$this->tournament->id,
-                'logo' => $logoPath,
+                'logo_path' => $logoPath,
             ]
         );
 
@@ -72,7 +72,7 @@ new class extends Component {
     }
     public function resetprops(){
         $this->event_id = null;
-        $this->title = '';
+        $this->name = '';
         $this->logo = null;
         $this->existing_logo = null;
     }
@@ -128,7 +128,7 @@ new class extends Component {
                 <flux:heading size="lg">{{ $event_id ? 'Edit Tournament' : 'Create Tournament' }}</flux:heading>
                 <flux:text class="mt-2">Make changes to your personal details.</flux:text>
             </div>
-            <flux:input wire:model="title" label="Title" placeholder="Event title" />
+            <flux:input wire:model="name" label="Name" placeholder="Event name" />
             <div class="space-y-3">
                 <flux:input type="file" accept="image/png, image/jpeg" wire:model="logo" label="Logo" />
 
@@ -142,7 +142,7 @@ new class extends Component {
             </div>
             <div class="flex">
                 <flux:spacer />
-                <flux:button wire:click="save" type="submit" variant="primary">Save changes</flux:button>
+                <flux:button wire:click="save"  variant="primary">Save changes</flux:button>
             </div>
         </div>
     </flux:modal>
@@ -156,15 +156,24 @@ new class extends Component {
                     <a 
                     href="{{ route('events.show', $event) }}"
                      class="flex items-center gap-4 flex-1">
-                        @if ($event->logo)
-                            <flux:avatar size="lg" src="{{ Storage::url($event->logo) }}" />
+                        @if ($event->logo_path)
+                            <flux:avatar size="lg" src="{{ Storage::url($event->logo_path) }}" />
                         @else
-                            <flux:avatar name="{{ $event->title }}" />
+                            <flux:avatar name="{{ $event->name }}" />
                         @endif
 
-                        <span class="text-gray-800 dark:text-white font-semibold">
-                            {{ $event->title }}
+                        <div class="">
+
+                        <span class="text-gray-800 capitalize dark:text-white font-semibold">
+                            {{ $event->name }}
                         </span>
+                        <div class="">
+                            <flux:text variant="muted" class="text-sm">
+                                {{ $event->tournament->name }}
+                            </flux:text>
+                        </div>
+                        </div>
+
                     </a>
 
                     <button wire:click="editEvent({{ $event->id }})" type="button"
@@ -176,7 +185,7 @@ new class extends Component {
 
         @empty
             <div class="">
-                NO Events CREATED YET!
+                NO EVENTS CREATED YET!
             </div>
 
         @endforelse

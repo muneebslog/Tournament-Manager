@@ -10,6 +10,7 @@ class Event extends Model
         'tournament_id',
         'name',
         'description',
+        'logo_path'
     ];
 
     public function tournament()
