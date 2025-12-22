@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Tournament extends Model
 {
-     protected $fillable = [
+    protected $fillable = [
         'name',
         'start_date',
         'end_date',
@@ -14,10 +14,16 @@ class Tournament extends Model
         'slogan',
         'status',
         'logo_path',
+        'created_by'
     ];
 
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
