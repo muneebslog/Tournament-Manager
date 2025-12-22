@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->integer('rating')->nullable();
+            $table->integer('ranking')->nullable();
             $table->string('subtext')->nullable();
+            $table->string('phone')->nullable();
             $table->string('pic')->nullable(); // file path or URL
             $table->timestamps();
         });

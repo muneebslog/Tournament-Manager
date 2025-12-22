@@ -9,8 +9,9 @@ class Player extends Model
      protected $fillable = [
         'event_id',
         'name',
-        'rating',
+        'ranking',
         'subtext',
+        'phone',
         'pic',
     ];
 

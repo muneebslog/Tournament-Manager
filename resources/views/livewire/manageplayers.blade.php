@@ -2,7 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\Player;
-use App\Models\TournamentEvent;
+use App\Models\Event;
 // use App\Models\Tournament;
 use Flux\Flux;
 use Livewire\Attributes\On;
@@ -19,12 +19,12 @@ new class extends Component {
     public $player_id;
     public $name;
     public $phone;
-    public $team;
+    public $subtext;
     public $ranking;
-    public $image;
-    public $existing_image;
+    public $pic;
+    public $existing_pic;
 
-    public function mount(TournamentEvent $eventid)
+    public function mount(Event $eventid)
     {
         $this->event = $eventid;
         $this->event_id = $eventid->id;
@@ -46,9 +46,9 @@ new class extends Component {
             $this->player_id = $player->id;
             $this->name = $player->name;
             $this->phone = $player->phone;
-            $this->team = $player->team;
+            $this->subtext = $player->subtext;
             $this->ranking = $player->ranking;
-            $this->existing_image = $player->image;
+            $this->existing_pic = $player->pic;
         }
 
         Flux::modal('manage-player')->show();
@@ -59,7 +59,7 @@ new class extends Component {
     {
         // Reset form for new player
         if (!$id) {
-            $this->reset(['player_id', 'name', 'phone', 'team', 'ranking', 'image', 'existing_image']);
+            $this->reset(['player_id', 'name', 'phone', 'subtext', 'ranking', 'pic', 'existing_pic']);
         } else {
             $this->edit($id); // load data if editing
         }
@@ -73,34 +73,34 @@ new class extends Component {
             'event' => 'required',
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:15',
-            'team' => 'nullable|string|max:255',
+            'subtext' => 'nullable|string|max:255',
             'ranking' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|max:3096',
+            'pic' => 'nullable|image|max:3096',
         ]);
 
-        $imagePath = $this->existing_image;
+        $picPath = $this->existing_pic;
 
-        if ($this->image) {
-            if ($this->existing_image) {
-                Storage::disk('public')->delete($this->existing_image);
+        if ($this->pic) {
+            if ($this->existing_pic) {
+                Storage::disk('public')->delete($this->existing_pic);
             }
-            $imagePath = $this->image->store('players/images', 'public');
+            $picPath = $this->pic->store('players/images', 'public');
         }
 
         Player::updateOrCreate(
             ['id' => $this->player_id],
             [
-                'tournament_event_id' => $this->event->id,
+                'event_id' => $this->event->id,
                 'name' => $this->name,
                 'phone' => $this->phone,
-                'team' => $this->team,
+                'subtext' => $this->subtext,
                 'ranking' => $this->ranking,
-                'image' => $imagePath,
+                'pic' => $picPath,
             ]
         );
 
-        $this->reset(['image']);
-        $this->existing_image = $imagePath;
+        $this->reset(['pic']);
+        $this->existing_pic = $picPath;
 
         $this->getData();
 
@@ -177,7 +177,7 @@ new class extends Component {
                                         <div class="flex items-center gap-x-2">
                                             <span
                                                 class="text-xs font-semibold uppercase text-gray-800 dark:text-neutral-200">
-                                                Team
+                                                subtext
                                             </span>
                                         </div>
                                     </th>
@@ -221,7 +221,7 @@ new class extends Component {
                                         <div class="px-6 py-3">
                                             <div class="flex items-center gap-x-3">
                                                 <img class="inline-block size-9.5 rounded-full"
-                                                    src="{{ Storage::url($player->image) }}"
+                                                    src="{{ Storage::url($player->pic) }}"
                                                     alt="{{ $player->name }}s Avatar">
                                                 <div class="grow">
                                                     <span
@@ -233,7 +233,7 @@ new class extends Component {
                                     <td class="size-px whitespace-nowrap">
                                         <div class="px-6 py-3">
                                             <span
-                                                class="block text-xs  text-gray-800 dark:text-neutral-200">{{ $player->team ?? 'N/A' }}</span>
+                                                class="block text-xs  text-gray-800 dark:text-neutral-200">{{ $player->subtext ?? 'N/A' }}</span>
                                         </div>
                                     </td>
                                     <td class="size-px whitespace-nowrap">
@@ -302,17 +302,17 @@ new class extends Component {
                         {{ $player_id ? 'Update player information.' : 'Add a new player to your tournament.' }}
                     </flux:text>
                 </div>
-                @if ($image || $existing_image)
+                @if ($pic || $existing_pic)
 
                     <div class=" flex justify-center items-center">
-                        @if ($image)
+                        @if ($pic)
                             <div class="">
-                                <img src="{{ $image->temporaryUrl() }}" class="h-20 w-20 rounded-full border object-cover" />
+                                <img src="{{ $pic->temporaryUrl() }}" class="h-20 w-20 rounded-full border object-cover" />
                                 <p class="text-xs text-gray-500">Preview (new upload):</p>
                             </div>
-                        @elseif ($existing_image)
+                        @elseif ($existing_pic)
                             <div class="">
-                                <img src="{{ Storage::url($existing_image) }}"
+                                <img src="{{ Storage::url($existing_pic) }}"
                                     class="h-20 w-20 rounded-full border object-cover" />
                                 <p class="text-xs text-gray-500">Current Image:</p>
                             </div>
@@ -321,13 +321,13 @@ new class extends Component {
                 @endif
 
                 <flux:input wire:model="name" label="Name" placeholder="Player name" />
-                <flux:input type="file" accept=".jpg, .png, .gif" wire:model="image" label="Image" />
+                <flux:input type="file" accept=".jpg, .png, .gif" wire:model="pic" label="Image" />
 
                 <flux:input wire:model="phone" label="Phone" mask=" 9999-9999999" placeholder="Phone number" />
 
                 <div class="flex gap-4">
                     <div class="w-full">
-                        <flux:input wire:model="team" label="Team / Organization" placeholder="Team name" />
+                        <flux:input wire:model="subtext" label="subtext / Organization" placeholder="subtext name" />
                     </div>
                     <div class="w-full">
                         <flux:input wire:model="ranking" label="Ranking" placeholder="Ranking" type="number" />
