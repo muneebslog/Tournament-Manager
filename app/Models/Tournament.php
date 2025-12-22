@@ -7,32 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Tournament extends Model
 {
      protected $fillable = [
-        'title',
-        'location',
+        'name',
         'start_date',
         'end_date',
+        'location',
+        'slogan',
         'status',
-        'created_by',
-        'logo',
-        'slogan'
+        'logo_path',
     ];
 
-    /**
-     * Relationships
-     */
-
-       // 🔗 Relationships
-    public function creator()
+    public function events()
     {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    // A tournament has many players
-   
-
-    // A tournament has many matches (game_matches)
-     public function events()
-    {
-        return $this->hasMany(TournamentEvent::class);
+        return $this->hasMany(Event::class);
     }
 }
