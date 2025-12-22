@@ -11,6 +11,7 @@ new class extends Component {
     use WithFileUploads;
     public $tournament;
 
+    public $permission = false; // Set to true to allow modal dismissal
     public $tournament_id;
     public $name;
     public $start_date;
@@ -26,11 +27,11 @@ new class extends Component {
 
         if ($this->tournament) {
             $this->tournament_id = $this->tournament->id;
-            $this->name = $this->tournament->title;
+            $this->name = $this->tournament->name;
             $this->start_date = $this->tournament->start_date;
             $this->end_date = $this->tournament->end_date;
             $this->location = $this->tournament->location;
-            $this->existing_logo = $this->tournament->logo;
+            $this->existing_logo = $this->tournament->logo_path;
             $this->slogan = $this->tournament->slogan;
             // dd($this->slogan);
         } else {
@@ -42,6 +43,13 @@ new class extends Component {
     public function openModal()
     {
         Flux::modal('manage-tournament')->show();
+        $this->permission = true;
+    }
+
+    public function closeModal()
+    {
+        Flux::modal('manage-tournament')->close();
+        $this->permission = false;
     }
 
     public function save()
@@ -64,12 +72,12 @@ new class extends Component {
         Tournament::updateOrCreate(
             ['id' => $this->tournament_id],
             [
-                'title' => $this->name,
+                'name' => $this->name,
                 'slogan' => $this->slogan,
                 'start_date' => $this->start_date,
                 'end_date' => $this->end_date,
                 'location' => $this->location,
-                'logo' => $logoPath,
+                'logo_path' => $logoPath,
                 'created_by' => auth()->id(),
             ]
         );
@@ -79,6 +87,7 @@ new class extends Component {
 
         // Flux::toast('Tournament saved successfully! 🎉')->success();
         Flux::modal('manage-tournament')->close();
+        $this->permission = false;
         $this->mount();
     }
 };
@@ -96,11 +105,11 @@ new class extends Component {
                     <div wire:click="openModal" class=" absolute top-2 right-4 ">
                         <flux:icon.pencil-square variant="mini" />
                     </div>
-                    <!-- Logo and Title Section -->
+                    <!-- Logo and name Section -->
                     <div class="flex flex-col lg:flex-row lg:items-center lg:gap-8 mb-10">
                         <!-- Logo -->
-                        @if ($tournament->logo)
-                            <img src="{{ Storage::url($tournament->logo) }}" alt="{{ $tournament->title }} logo"
+                        @if ($tournament->logo_path)
+                            <img src="{{ Storage::url($tournament->logo_path) }}" alt="{{ $tournament->name }} logo"
                                 class="h-24 w-24 object-cover rounded-xl " />
                         @else
                             <div class="h-24 w-24 bg-gray-200 flex items-center justify-center rounded-xl text-gray-500">
@@ -112,11 +121,11 @@ new class extends Component {
                                 </div>
                             </div>
                         @endif
-                        <!-- Title and Info -->
+                        <!-- name and Info -->
                         <div class="flex-1">
                             <h1
                                 class="text-4xl capitalize lg:text-5xl font-black text-gray-900 dark:text-white mb-2 leading-tight">
-                                {{ $tournament->title }}
+                                {{ $tournament->name }}
                             </h1>
                             <p class="text-lg text-gray-600 dark:text-slate-400 font-medium">
                                 {{ $tournament->slogan ? $tournament->slogan : 'Compete against the best players worldwide'}}
@@ -209,7 +218,7 @@ new class extends Component {
                         <flux:input wire:model="location" label="Location" placeholder="Location" />
 
                         <div class="space-y-3">
-                            <flux:input type="file" wire:model="logo" label="Logo" />
+                            <flux:input type="file"  accept="image/*" wire:model="logo" label="Logo" />
 
                             @if ($logo)
                                 <p class="text-sm text-gray-500">Preview (new upload):</p>
@@ -222,6 +231,9 @@ new class extends Component {
 
                         <div class="flex">
                             <flux:spacer />
+                            <flux:button wire:click="closeModal" type="button"  class="mr-3">
+                                Cancel
+                            </flux:button>
                             <flux:button type="submit" variant="primary">
                                 ⚡ {{ $tournament_id ? 'Update Tournament' : 'Launch Tournament' }}
                             </flux:button>

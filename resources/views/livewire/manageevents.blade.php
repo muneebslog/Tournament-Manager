@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\TournamentEvent;
+use App\Models\Event;
 use App\Models\Tournament;
 use Flux\Flux;
 use Livewire\WithFileUploads;
@@ -31,7 +31,7 @@ new class extends Component {
     }
     public function editEvent($eventId)
     {
-        $event = TournamentEvent::find($eventId);
+        $event = Event::find($eventId);
         if ($event) {
             $this->event_id = $event->id;
             $this->title = $event->title;
@@ -54,7 +54,7 @@ new class extends Component {
             $logoPath = $this->logo->store('tournaments/logos', 'public');
         }
 
-        TournamentEvent::updateOrCreate(
+        Event::updateOrCreate(
             ['id' => $this->event_id],
             [
                 'title' => $this->title,
@@ -130,7 +130,7 @@ new class extends Component {
             </div>
             <flux:input wire:model="title" label="Title" placeholder="Event title" />
             <div class="space-y-3">
-                <flux:input type="file" wire:model="logo" label="Logo" />
+                <flux:input type="file" accept="image/png, image/jpeg" wire:model="logo" label="Logo" />
 
                 @if ($logo)
                     <p class="text-sm text-gray-500">Preview (new upload):</p>

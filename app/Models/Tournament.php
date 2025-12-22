@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Tournament extends Model
 {
@@ -26,4 +27,11 @@ class Tournament extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    // public function getLogoUrlAttribute()
+    // {
+    //     return $this->logo_path
+    //         ? Storage::url($this->logo_path)
+    //         : '/images/default-logo.png'; // optional default image
+    // }
 }
