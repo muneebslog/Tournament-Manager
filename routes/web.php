@@ -12,8 +12,8 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Volt::route('/scores', 'matchList')->name('match.list');
-Volt::route('/score/{match}', 'ScoreBoard')->name('match.scoreboard');
+Volt::route('/scores', 'matchlist')->name('match.list');
+Volt::route('/score/{match}', 'scoreboard')->name('match.scoreboard');
 Volt::route('/match/generate/{event}', 'matchesgenerator')->name('match.generator');
 
 
@@ -21,7 +21,7 @@ Volt::route('/match/generate/{event}', 'matchesgenerator')->name('match.generato
 Route::middleware(['auth'])->group(function () {
     // APP ROUTES:
     Volt::route('/events/{id}', 'showevents')->name('events.show');
-    Volt::route('/match/{match}', 'matchControlPanel')->name('match.control');
+    Volt::route('/match/{match}', 'matchcontrolpanel')->name('match.control');
     Volt::route('/event/{eventid}/players', 'manageplayers')->name('event.players');
     Volt::route('/event/{eventid}/matches', 'managematches')->name('event.matches');
 

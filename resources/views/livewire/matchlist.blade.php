@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\TournamentEvent;
-use App\Models\GameMatch;
+use App\Models\Event;
+use App\Models\Game;
 use Livewire\Attributes\{Layout, Title};
 
 
@@ -14,20 +14,18 @@ new
     public $matches;
     public function mount()
     {
-        $this->events = TournamentEvent::has('matches')->get();
-        ;
+        $this->events = Event::has('games')->get();
+        $this->showMatches($this->events->first()->id);
     }
 
     public function showMatches($id)
     {
-        $this->matches = GameMatch::where('tournament_event_id', $id)
-            ->whereNotNull('player1_id')
-            ->whereNotNull('player2_id')
+        $this->matches = Game::where('event_id', $id)
+            ->whereNotNull('team1_id')
+            ->whereNotNull('team2_id')
             ->orderBy('created_at', 'desc')
             ->get();
-
-
-
+            // dd($this->matches[0]);
     }
 }; ?>
 
@@ -370,8 +368,8 @@ new
                         <div class="event-content">
                             <div class="event-avatar">T</div>
                             <div class="event-info">
-                                <div class="event-title">{{ $event->title }}</div>
-                                <div class="event-subtitle">{{ count($event->matches) }} matches</div>
+                                <div class="event-title">{{ $event->name }}</div>
+                                <div class="event-subtitle">{{ count($event->games) }} matches</div>
                             </div>
                         </div>
                     </div>
@@ -387,32 +385,33 @@ new
             <h2 class="section-title">Matches</h2>
             <div class="matches-grid">
                 <!-- Completed Match -->
+               
                 @if ($matches)
                     @foreach ($matches as $match)
 
 
                         <div class="match-card completed">
                             <div class="match-header">
-                                <span class="match-title">{{ $match->title }}</span>
+                                <span class="match-title">{{ $match->name }}</span>
                                 <span class="match-badge completed">{{ $match->status }}</span>
                             </div>
 
                             <div class="match-players">
                                 <div class="player-row">
-                                    <span class="player-name">{{ $match->player1->name }}<span
-                                            class="winner-crown">{{ $match->winner_id == $match->player1_id ? '👑' : '' }}</span></span>
+                                    <span class="player-name">{{ $match->team1->name }}<span
+                                            class="winner-crown">{{ $match->winner_team_id == $match->team1_id ? '👑' : '' }}</span></span>
                                     <div class="player-score">
-                                        @foreach ($match->rounds as $round)
-                                            <div class="round-score">{{ $round->player1_score }}</div>
+                                        @foreach ($match->scores as $round)
+                                            <div class="round-score">{{ $round->team1_score }}</div>
                                         @endforeach
                                     </div>
                                 </div>
                                 <div class="vs-separator">vs</div>
                                 <div class="player-row">
-                                    <span class="player-name">{{ $match->player2->name }}<span
-                                            class="winner-crown">{{ $match->winner_id == $match->player2_id ? '👑' : '' }}</span></span>
-                                    @foreach ($match->rounds as $round)
-                                        <div class="round-score">{{ $round->player2_score }}</div>
+                                    <span class="player-name">{{ $match->team2->name }}<span
+                                            class="winner-crown">{{ $match->winner_id == $match->team2_id ? '👑' : '' }}</span></span>
+                                    @foreach ($match->scores as $round)
+                                        <div class="round-score">{{ $round->team2_score }}</div>
                                     @endforeach
                                 </div>
                             </div>

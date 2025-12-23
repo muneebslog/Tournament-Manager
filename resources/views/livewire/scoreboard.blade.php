@@ -1,9 +1,9 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\GameMatch;
-use App\Models\Round;
-use App\Models\Event;
+use App\Models\Game;
+use App\Models\GameScore;
+use App\Models\GameEvent;
 use Livewire\Attributes\{Layout, Title};
 use Livewire\Attributes\On;
 
@@ -22,33 +22,33 @@ new
     public $redCards = [];
 
 
-    public function mount(GameMatch $match)
+    public function mount(Game $match)
     {
         $this->match = $match;
         // $this->winner();
-        $this->roundscount = $match->rounds()->count();
-        $round = Round::where('game_match_id', $match->id)->latest()->first();
+        $this->roundscount = $match->scores()->count();
+        $round = GameScore::where('game_id', $match->id)->latest()->first();
         if (!$round) {
             return;
         }
-        $event = Event::where('round_id', $round->id)->where('event_type', 'point')->latest()->first();
-        $this->serve = $event?->player_id ?? null;
+        // $event = GameEvent::where('game_id', $match->id)->where('event_type', 'point')->latest()->first();
+        // $this->serve = $event?->player_id ?? null;
 
-        $this->yellowCards = Event::whereIn('round_id', $match->rounds()->pluck('id'))
-            ->where('event_type', 'yellow_card')
-            ->selectRaw('player_id, COUNT(*) as count')
-            ->groupBy('player_id')
-            ->pluck('count', 'player_id');
+        // $this->yellowCards = GameEvent::whereIn('round_id', $match->()->pluck('id'))
+        //     ->where('event_type', 'yellow_card')
+        //     ->selectRaw('player_id, COUNT(*) as count')
+        //     ->groupBy('player_id')
+        //     ->pluck('count', 'player_id');
 
-        $this->redCards = Event::whereIn('round_id', $match->rounds()->pluck('id'))
-            ->where('event_type', 'red_card')
-            ->selectRaw('player_id, COUNT(*) as count')
-            ->groupBy('player_id')
-            ->pluck('count', 'player_id');
+        // $this->redCards = GameEvent::whereIn('round_id', $match->rounds()->pluck('id'))
+        //     ->where('event_type', 'red_card')
+        //     ->selectRaw('player_id, COUNT(*) as count')
+        //     ->groupBy('player_id')
+        //     ->pluck('count', 'player_id');
         if ($this->match->status === 'completed') {
             $this->winner();
         }
-        $this->serve = $event?->player_id ?? null;
+        // $this->serve = $event?->player_id ?? null;
 
 
         // dd($event);
@@ -62,34 +62,34 @@ new
         $this->match->refresh();
 
         // Update total rounds count
-        $this->roundscount = $this->match->rounds()->count();
+        $this->roundscount = $this->match->scores()->count();
 
         // Get the latest round and point event to determine serve
-        $round = Round::where('game_match_id', $this->match->id)->latest()->first();
-        $lastEvent = Event::where('round_id', $round->id ?? null)
+        $round = GameScore::where('game_id', $this->match->id)->latest()->first();
+        $lastEvent = GameEvent::where('game_id', $round->id ?? null)
             ->where('event_type', 'point')
             ->latest()
             ->first();
         $this->serve = $lastEvent?->player_id ?? null;
 
         // Update yellow and red cards counts
-        $roundIds = $this->match->rounds()->pluck('id');
+        $roundIds = $this->match->scores()->pluck('id');
 
-        $this->yellowCards = Event::whereIn('round_id', $roundIds)
-            ->where('event_type', 'yellow_card')
-            ->selectRaw('player_id, COUNT(*) as count')
-            ->groupBy('player_id')
-            ->pluck('count', 'player_id');
+        // $this->yellowCards = GameEvent::whereIn('round_id', $roundIds)
+        //     ->where('event_type', 'yellow_card')
+        //     ->selectRaw('player_id, COUNT(*) as count')
+        //     ->groupBy('player_id')
+        //     ->pluck('count', 'player_id');
 
-        $this->redCards = Event::whereIn('round_id', $roundIds)
-            ->where('event_type', 'red_card')
-            ->selectRaw('player_id, COUNT(*) as count')
-            ->groupBy('player_id')
-            ->pluck('count', 'player_id');
-        // After updating yellow/red cards in getData()
-        if ($this->match->status === 'completed') {
-            $this->winner();
-        }
+        // $this->redCards = GameEvent::whereIn('round_id', $roundIds)
+        //     ->where('event_type', 'red_card')
+        //     ->selectRaw('player_id, COUNT(*) as count')
+        //     ->groupBy('player_id')
+        //     ->pluck('count', 'player_id');
+        // // After updating yellow/red cards in getData()
+        // if ($this->match->status === 'completed') {
+        //     $this->winner();
+        // }
 
 
         // Optionally, trigger a browser event or toast notification
@@ -426,36 +426,37 @@ new
 
                     <div class="team-info">
                         <div class="team-name">
-                            <span id="team1Name">{{ $match->player1->name }}</span>
+                            <span id="team1Name">{{ $match->team1->name }}</span>
                             <span id="shuttle1" class="shuttle-indicator"
-                                style="{{ $match->player1->id == $serve ? '' : 'display: none;' }}">
+                                {{-- style="{{ $match->player1->id == $serve ? '' : 'display: none;' }}" --}}
+                                >
                                 <span class="shuttle-icon">🏸</span>
                             </span>
                             <span id="team1Cards" class="cards-container">
-                                @if(($yellowCards[$match->player1->id] ?? 0) > 0)
+                                {{-- @if(($yellowCards[$match->player1->id] ?? 0) > 0)
                                     <span class="card-badge yellow-card-badge">
                                         🟨 <span class="card-count">{{ $yellowCards[$match->player1->id] }}</span>
                                     </span>
-                                @endif
-                                @if(($redCards[$match->player1->id] ?? 0) > 0)
+                                @endif --}}
+                                {{-- @if(($redCards[$match->player1->id] ?? 0) > 0)
                                     <span class="card-badge red-card-badge">
                                         🟥 <span class="card-count">{{ $redCards[$match->player1->id] }}</span>
                                     </span>
-                                @endif
+                                @endif --}}
                             </span>
                         </div>
-                        <div class="player-names" id="team1Players">{{ $match->player1->team }}</div>
+                        {{-- <div class="player-names" id="team1Players">{{ $match->->subtext }}</div> --}}
                     </div>
 
                     <div class="scores">
-                        <div class="wins-indicator" id="team1Wins">{{ $match->player1_rounds_won ?? 0 }}</div>
-                        @foreach ($match->rounds as $round)
+                        <div class="wins-indicator" id="team1Wins">{{ $match->team1_points ?? 0 }}</div>
+                        @foreach ($match->scores as $round)
 
                             @if ($loop->last)
                                 <div class="current-score" id="team1Score">
-                                    {{ str_pad($round->player1_score, 2, '0', STR_PAD_LEFT) }}</div>
+                                    {{ str_pad($round->team1_score, 2, '0', STR_PAD_LEFT) }}</div>
                             @else
-                                <div class="round-score" id="team1R2">{{ str_pad($round->player1_score, 2, '0', STR_PAD_LEFT) }}
+                                <div class="round-score" id="team1R2">{{ str_pad($round->team1_score, 2, '0', STR_PAD_LEFT) }}
                                 </div>
                             @endif
 
@@ -470,13 +471,14 @@ new
 
                     <div class="team-info">
                         <div class="team-name">
-                            <span id="team2Name">{{ $match->player2->name }}</span>
+                            <span id="team2Name">{{ $match->team2->name }}</span>
                             <span id="shuttle2" class="shuttle-indicator"
-                                style="{{ $match->player2->id == $serve ? '' : 'display: none;' }}">
+                                {{-- style="{{ $match->player2->id == $serve ? '' : 'display: none;' }}" --}}
+                        >
                                 <span class="shuttle-icon">🏸</span>
                             </span>
                             <span id="team1Cards" class="cards-container">
-                                @if(($yellowCards[$match->player2->id] ?? 0) > 0)
+                                {{-- @if(($yellowCards[$match->player2->id] ?? 0) > 0)
                                     <span class="card-badge yellow-card-badge">
                                         🟨 <span class="card-count">{{ $yellowCards[$match->player2->id] }}</span>
                                     </span>
@@ -485,20 +487,19 @@ new
                                     <span class="card-badge red-card-badge">
                                         🟥 <span class="card-count">{{ $redCards[$match->player2->id] }}</span>
                                     </span>
-                                @endif
+                                @endif --}}
                             </span>
                         </div>
-                        <div class="player-names" id="team2Players">{{ $match->player2->team }}</div>
+                        {{-- <div class="player-names" id="team2Players">{{ $match->player2->team }}</div> --}}
                     </div>
 
                     <div class="scores">
-                        <div class="wins-indicator" id="team2Wins">{{ $match->player2_rounds_won ?? 0 }}</div>
-
-                        @foreach ($match->rounds as $round)
+                        <div class="wins-indicator" id="team2Wins">{{ $match->team2_points ?? 0 }}</div>
+                        @foreach ($match->scores as $round)
                            @if ($loop->last)
-                                <div class="current-score" id="team2Score">{{ str_pad($round->player2_score, 2, '0', STR_PAD_LEFT) }}</div>
+                                <div class="current-score" id="team2Score">{{ str_pad($round->team2_score, 2, '0', STR_PAD_LEFT) }}</div>
                             @else
-                                <div class="round-score" id="team2R2">{{ str_pad($round->player2_score, 2, '0', STR_PAD_LEFT) }}</div>
+                                <div class="round-score" id="team2R2">{{ str_pad($round->team2_score, 2, '0', STR_PAD_LEFT) }}</div>
                             @endif
 
 
