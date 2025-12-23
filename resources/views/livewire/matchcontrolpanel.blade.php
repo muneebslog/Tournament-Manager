@@ -2,10 +2,9 @@
 
 use Livewire\Volt\Component;
 use App\Models\Game;
-use App\Models\Event;
+use App\Models\GameEvent;
 use App\Models\Player;
 use Carbon\Carbon;
-use App\Events\MatchUpdated;
 
 
 
@@ -18,6 +17,7 @@ new class extends Component {
     public $roundWinner;
     public $startButton;
     public $winnerName;
+    public $lastround=false;
     public $manualEventPlayer;
     public $manualEventType;
 
@@ -26,7 +26,7 @@ new class extends Component {
     public function mount(Game $match)
     {
         $this->match = $match;
-        $this->sets = $this->match->max_rounds;
+        $this->sets = $this->match->bestof;
         $this->round = $this->match->scores()->latest()->first();
         if ($this->round == null) {
             $this->modal = true;
@@ -37,7 +37,9 @@ new class extends Component {
         if ($this->match->status == 'completed') {
             $this->showcontrolpanel = false;
             $this->modal = true;
-            $this->roundWinner = $this->match->winner_id;
+            $this->roundWinner = $this->match->winner_team_id;
+            // dd($this->roundWinner);
+            $this->lastround=true;
         }
     }
 
@@ -45,49 +47,45 @@ new class extends Component {
     {
         $this->match->status = "ongoing";
         $this->match->shuttles_used = 1;
+        $this->match->start_time = now();
+        // $this->match->round_going = 1;
         $this->match->save();
         $this->round = $this->match->scores()->create([
-            'status' => 'ongoing',
-            'started_at' => now(),
-            'round_number' => ($this->match->scores()->count() + 1),
+            'set_number' => ($this->match->scores()->count() + 1),
             'player1_score' => 0,
             'player2_score' => 0,
         ]);
         $this->showcontrolpanel = true;
         $this->modal = false;
-        $this->logEvent('start_round', null, 'Round ' . $this->round->round_number . ' started');
+        $this->logEvent('start_round', 'Round ' . $this->round->set_number . ' started');
 
     }
 
-    public function increaseScore($player)
+    public function increaseScore($team)
     {
-        if ($player == 'player1') {
-            $this->round->player1_score += 1;
-        } elseif ($player == 'player2') {
-            $this->round->player2_score += 1;
+        if ($team == 'team1') {
+            $this->round->team1_score += 1;
+        } elseif ($team == 'team2') {
+            $this->round->team2_score += 1;
         }
         $this->round->save();
-        $id = $this->match->{$player}->id;
-        $name = $this->match->{$player}->name;
-        $this->logEvent('point', $id, 'Player ' . $name . ' scored +1');
+        $id = $this->match->{$team}->id;
+        $this->logEvent('point', $team . ' scored +1');
         $this->WinnerCheck();
 
         // Example inside increaseScore() after saving
 
     }
 
-    public function decreaseScore($player)
+    public function decreaseScore($team)
     {
-        if ($player == 'player1' && $this->round->player1_score > 0) {
-            $this->round->player1_score -= 1;
-        } elseif ($player == 'player2' && $this->round->player2_score > 0) {
-            $this->round->player2_score -= 1;
+        if ($team == 'team1' && $this->round->team1_score > 0) {
+            $this->round->team1_score -= 1;
+        } elseif ($team == 'team2' && $this->round->team2_score > 0) {
+            $this->round->team2_score -= 1;
         }
         $this->round->save();
-        $id = $this->match->{$player}->id;
-        $name = $this->match->{$player}->name;
-
-        $this->logEvent('point_deduction', $id, 'Player ' . $name . ' scored -1');
+        $this->logEvent('point_deduction', 'Player ' . $team . ' scored -1');
     }
 
     public function WinnerCheck()
@@ -96,8 +94,8 @@ new class extends Component {
         $scoreDifference = 2;
         $maxScore = 30; // optional, use if you want a hard limit (e.g., badminton rule)
 
-        $p1 = $this->round->player1_score;
-        $p2 = $this->round->player2_score;
+        $p1 = $this->round->team1_score;
+        $p2 = $this->round->team2_score;
 
         // Check if either player has reached at least the winning score
         if ($p1 >= $winningScore || $p2 >= $winningScore) {
@@ -106,58 +104,56 @@ new class extends Component {
             // Handle deuce logic: must lead by at least 2 OR reach max score
             if ($scoreDiff >= $scoreDifference || $p1 == $maxScore || $p2 == $maxScore) {
                 // We have a winner
-                $winner_id = $p1 > $p2 ? $this->match->player1_id : $this->match->player2_id;
+                $winner_id = $p1 > $p2 ? $this->match->team1_id : $this->match->team2_id;
                 $this->EndRound($winner_id);
-                $this->logEvent('winner', $winner_id, 'Round ' . $this->round->round_number . ' won by ' . $this->winnerName);
+                $this->logEvent('winner', 'Round ' . $this->round->set_number . ' won by ' . $this->winnerName);
                 $this->showcontrolpanel = false;
                 $this->modal = true;
                 $this->roundWinner = $winner_id;
-                $this->winnerName = $winner_id == $this->match->player1_id ? $this->match->player1->name : $this->match->player2->name;
-
+                if ($this->match->is_doubles) {
+                $this->winnerName = $winner_id == $this->match->team1_id ? $this->match->team1->players->first()->name.'&'.$this->match->team1->players->last()->name : $this->match->team2->players->first()->name.'&'.$this->match->team2->players->last()->name;
+                }
+                else {
+                    $this->winnerName = $winner_id == $this->match->team1_id ? $this->match->team1->players->first()->name : $this->match->team2->players->first()->name;
+                }
             }
         }
     }
 
-    public function EndRound($winner_id)
+    public function EndRound($winnerteam_id)
     {
 
-        // Mark current round as completed
-        $this->round->update([
-            'status' => 'completed',
-            'winner_id' => $winner_id,
-            'ended_at' => now(),
-        ]);
-        $this->logEvent('end_round', null, 'Round ' . $this->round->round_number . ' ended');
 
-        // Count total rounds per player
-        $player1Rounds = $this->match->rounds()->where('winner_id', $this->match->player1_id)->count();
-        $player2Rounds = $this->match->rounds()->where('winner_id', $this->match->player2_id)->count();
+        $this->logEvent('end_round', 'Round ' . $this->round->set_number . ' ended');
+
+
 
         // Update rounds won in the match table
-        $this->match->update([
-            'player1_rounds_won' => $player1Rounds,
-            'player2_rounds_won' => $player2Rounds,
-        ]);
+        if ($winnerteam_id == $this->match->team1_id) {
+            $this->match->team1_points += 1;
+        } else {
+            $this->match->team2_points += 1;
+        }
+        $this->match->save();
+        $hasTwoConsecutiveWins = false;
 
         // Get last two winners to check for consecutive wins
-        $lastTwoWinners = $this->match->rounds()
-            ->orderByDesc('round_number')
-            ->take(2)
-            ->pluck('winner_id')
-            ->toArray();
-
-        $hasTwoConsecutiveWins = count($lastTwoWinners) === 2 && $lastTwoWinners[0] === $lastTwoWinners[1];
+        if ($this->match->team1_points >= 2 && $this->match->team2_points == 0) {
+            $hasTwoConsecutiveWins = true;
+        }
 
         // Check if this was the final round
-        $isLastSet = $this->round->round_number >= $this->sets;
+        $isLastSet = $this->round->set_number >= $this->sets;
+        $winner_id = $this->match->team1_points > $this->match->team2_points ? $this->match->team1_id : $this->match->team2_id;
 
         // Decide match outcome
         if ($hasTwoConsecutiveWins || $isLastSet) {
             $this->match->update([
                 'status' => 'completed',
-                'winner_id' => $winner_id,
+                'winner_team_id' => $winner_id,
             ]);
-            
+            $this->lastround=true;
+
 
 
             $this->modal = true;
@@ -170,23 +166,22 @@ new class extends Component {
         }
     }
 
-    public function logEvent($eventType, $playerId, $description)
+    public function logEvent($eventType, $description)
     {
-        Event::create([
-            'round_id' => $this->round->id,
-            'player_id' => $playerId,
+        GameEvent::create([
+            'game_id' => $this->match->id,
             'event_type' => $eventType,
             'description' => $description,
-            'player1_score' => $this->round->player1_score,
-            'player2_score' => $this->round->player2_score,
-            'timestamp' => now(),
+            'team1_points_at_event' => $this->round->team1_score,
+            'team2_points_at_event' => $this->round->team2_score,
         ]);
+
     }
 
     public function getEventsProperty()
     {
-        return $this->round
-            ? $this->round->events()->latest()->take(10)->get()
+        return $this->match->gameevents()->exists()
+            ? $this->match->gameevents()->latest()->take(10)->get()
             : collect();
     }
 
@@ -198,7 +193,7 @@ new class extends Component {
             $this->match->shuttles_used -= 1;
         }
         $this->match->save();
-        $this->logEvent('shuttle_change', null, 'Shuttles used updated to ' . $this->match->shuttles_used);
+        $this->logEvent('shuttle_change', 'Shuttles used updated to ' . $this->match->shuttles_used);
 
     }
 
@@ -239,19 +234,18 @@ new class extends Component {
                 <!-- Left: Court Number -->
                 <div class="text-left">
                     <p class="text-sm opacity-75">Court</p>
-                    <p class="text-3xl font-bold"># {{ $match->court_number }}</p>
+                    <p class="text-3xl font-bold">{{ $match->name }}</p>
                 </div>
 
                 <!-- Center: Title -->
                 <div class="text-center col-span-2">
-                    <h1 class="text-4xl font-bold">{{ $match->title }}</h1>
                     <span class="text-sm font-semibold opacity-90">Sn# {{ $match->match_serial_number }}</span>
                 </div>
 
                 <!-- Right: Round Number -->
                 <div class="text-right">
                     <p class="text-sm opacity-75">Round</p>
-                    <p class="text-3xl font-bold" id="roundDisplay">{{ $round->round_number ?? '0' }}</p>
+                    <p class="text-3xl font-bold" id="roundDisplay">{{ $round->set_number ?? '0' }}</p>
                 </div>
             </div>
         </div>
@@ -269,19 +263,24 @@ new class extends Component {
             <div
                 class="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-8 py-6 shadow-lg">
                 <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $match->player1->name }}</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                        {{ $match->team1->players->first()->name }}
+                        @if ($match->is_doubles)
+                            & {{ $match->team1->players->last()->name }}
+                        @endif
+                    </h2>
                 </div>
 
                 <div class="mb-8 text-center">
-                    <p class="text-5xl font-bold text-blue-600 dark:text-blue-400">{{ $round->player1_score }}</p>
+                    <p class="text-5xl font-bold text-blue-600 dark:text-blue-400">{{ $round->team1_score ?? 0 }}</p>
                 </div>
 
                 <div class="flex justify-center gap-6">
-                    <flux:button variant="primary" color="red" wire:click="decreaseScore('player1')" class="">
+                    <flux:button variant="primary" color="red" wire:click="decreaseScore('team1')" class="">
                         <span class="px-2 text-4xl">-</span>
 
                     </flux:button>
-                    <flux:button variant="primary" color="green" wire:click="increaseScore('player1')" class="">
+                    <flux:button variant="primary" color="green" wire:click="increaseScore('team1')" class="">
                         <span class="px-2 text-4xl">+</span>
                     </flux:button>
                 </div>
@@ -291,18 +290,23 @@ new class extends Component {
             <div
                 class="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-8 py-6 shadow-lg">
                 <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $match->player2->name }}</h2>
+                   <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                        {{ $match->team2->players->first()->name }}
+                        @if ($match->is_doubles)
+                            & {{ $match->team2->players->last()->name }}
+                        @endif
+                    </h2>
                 </div>
 
                 <div class="mb-8 text-center">
-                    <p class="text-5xl font-bold text-purple-600 dark:text-purple-400">{{ $round->player2_score }}</p>
+                    <p class="text-5xl font-bold text-purple-600 dark:text-purple-400">{{ $round->team2_score ?? 0 }}</p>
                 </div>
 
                 <div class="flex justify-center gap-6">
-                    <flux:button variant="primary" color="red" wire:click="decreaseScore('player2')" class="">
+                    <flux:button variant="primary" color="red" wire:click="decreaseScore('team2')" class="">
                         <span class="px-2 text-4xl">-</span>
                     </flux:button>
-                    <flux:button variant="primary" color="green" wire:click="increaseScore('player2')" class="">
+                    <flux:button variant="primary" color="green" wire:click="increaseScore('team2')" class="">
                         <span class="px-2 text-4xl">+</span>
                     </flux:button>
                 </div>
@@ -312,11 +316,12 @@ new class extends Component {
         <div class="grid grid-cols-1 sm:grid-cols-2 grid-rows-1 gap-1 sm:mt-2">
             <div
                 class="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg p-6 sm:mb-8 shadow-lg">
-
+                {{-- --}}
                 <!-- Activity Log -->
                 <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Activity Log</h3>
 
                 <div class="space-y-3 max-h-64 overflow-y-auto">
+
                     @foreach ($this->events as $event)
                         <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <span class="text-gray-500 dark:text-gray-400 text-sm font-semibold">
@@ -347,9 +352,17 @@ new class extends Component {
                     </flux:radio.group>
                     <flux:select wire:model="manualEventPlayer" class=" flex">
                         <flux:select.option>Choose Player</flux:select.option>
-                        <flux:select.option value="{{ $match->player1->id }}">{{ $match->player1->name }}
+                        <flux:select.option value="{{ $match->team1->players[0]->id }}">
+                            {{ $match->team1->players[0]->name }}
                         </flux:select.option>
-                        <flux:select.option value="{{ $match->player2->id }}">{{ $match->player2->name }}
+                        <flux:select.option value="{{ $match->team1->players[0]->id }}">
+                            {{ $match->team1->players[0]->name }}
+                        </flux:select.option>
+                        <flux:select.option value="{{ $match->team2->players[0]->id }}">
+                            {{ $match->team2->players[0]->name }}
+                        </flux:select.option>
+                        <flux:select.option value="{{ $match->team2->players[0]->id }}">
+                            {{ $match->team2->players[0]->name }}
                         </flux:select.option>
                     </flux:select>
                     <flux:button wire:click="logManualEvent" class=" w-full">Log</flux:button>
@@ -394,11 +407,19 @@ new class extends Component {
                     <flux:text class="mt-2">You Have Won The Round</flux:text>
                 </div>
                 <div>
-                    <flux:heading size="lg">Scores: {{ $round->player1_score }} - {{ $round->player2_score }}</flux:heading>
-                    <flux:text class="mt-2">{{ $match->player1->name }} - {{ $match->player2->name }}</flux:text>
+                    <flux:heading size="lg">Scores: {{ $round->team1_score }} - {{ $round->team2_score }}</flux:heading>
+                    <flux:text class="mt-2">{{ $match->team1->name }} - {{ $match->team2->name }}</flux:text>
 
                 </div>
 
+
+            @endif
+            @if ($lastround)
+                <div class="flex gap-4 items-center">
+                    <flux:button wire:navigate href="{{ route('event.matches', $match->event->id) }}">Back To Matches</flux:button>
+                    <flux:button wire:navigate href="{{ route('event.matches', $match->event->id) }}">See Details</flux:button>
+                </div>
+               
 
             @endif
 

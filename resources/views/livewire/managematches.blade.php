@@ -26,6 +26,7 @@ new class extends Component {
     public $match_date;
     public $court_number;
 
+
     public $isDoubles = 0;
 
     public function mount(Event $eventid)
@@ -33,9 +34,10 @@ new class extends Component {
         $this->event = $eventid;
         $this->event = $eventid->load('players', 'rounds');
         $this->players = $this->event->players ?? collect();
+        $this->rounds = $this->event->rounds ?? collect();
         // dd($this->players);
-
-        $this->round = $this->event->rounds[0] ?? collect();
+        // dd($this->rounds);
+        $this->round = $this->rounds[0] ?? collect();
         $this->matches = $this->round->games ?? collect();
         $this->numberOfPlayers = $this->players->count();
         // dd($this->player1_id);
@@ -233,11 +235,15 @@ new class extends Component {
 
             if ($match) {
                 // Create Team 1
-                $team1name = $this->event->id . "-" . $match->id . "-Team1";
+                // TEAM 1
+                $team1Players = Player::whereIn('id', $this->team1)->pluck('name')->toArray();
+                $team1Name = implode(' & ', $team1Players);
+
                 $team1 = Team::create([
-                    'name' => $team1name,
+                    'name' => $team1Name,
                     'event_id' => $this->event->id,
                 ]);
+
                 foreach ($this->team1 as $playerId) {
                     TeamPlayer::create([
                         'team_id' => $team1->id,
@@ -245,12 +251,16 @@ new class extends Component {
                     ]);
                 }
 
-                // Create Team 2
-                $team2name = $this->event->id . "-" . $match->id . "-Team2";
+
+                // TEAM 2
+                $team2Players = Player::whereIn('id', $this->team2)->pluck('name')->toArray();
+                $team2Name = implode(' & ', $team2Players);
+
                 $team2 = Team::create([
-                    'name' => $team2name,
+                    'name' => $team2Name,
                     'event_id' => $this->event->id,
                 ]);
+
                 foreach ($this->team2 as $playerId) {
                     TeamPlayer::create([
                         'team_id' => $team2->id,
@@ -339,7 +349,7 @@ new class extends Component {
             <a class="flex-none font-semibold text-xl text-black focus:outline-hidden focus:opacity-80 dark:text-white"
                 href="#" aria-label="Brand">{{ $round->name }}</a>
             <div class="flex flex-row items-center gap-3 mt-5 sm:justify-end sm:mt-0 sm:ps-5">
-                @foreach ($event->rounds as $round)
+                @foreach ($rounds as $round)
                     <flux:button wire:click="getRound({{ $round->id }})">{{ $round->name }}</flux:button>
                 @endforeach
 
@@ -419,7 +429,7 @@ new class extends Component {
                             </span>
                             <div class=" flex gap-2">
 
-                                @foreach ($match->rounds as $round)
+                                @foreach ($match->scores as $round)
                                     <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
                                         <span class="font-medium text-sm"> {{ $round->player1_score }}</span>
                                     </div>
@@ -437,12 +447,12 @@ new class extends Component {
                             </span>
                             <div class=" flex gap-2">
 
-                                @foreach ($match->rounds as $round)
-                                    <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
-                                        <span class="font-medium text-sm"> {{ $round->player2_score }}</span>
-                                    </div>
+                                {{-- @foreach ($match->rounds as $round)
+                                <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
+                                    <span class="font-medium text-sm"> {{ $round->player2_score }}</span>
+                                </div>
 
-                                @endforeach
+                                @endforeach --}}
                             </div>
                         </div>
                     </div>
@@ -460,9 +470,10 @@ new class extends Component {
 
                 </div>
 
-            @elseif ($match->status == null || $match->status == 'pending'|| $match->status == 'ready')
+            @elseif ($match->status == null || $match->status == 'pending' || $match->status == 'ready')
                 <!-- Match Card Enhanced -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 pb-3 border-l-4 {{ $match->status == 'ready' ? 'border-yellow-500' : 'border-red-500' }}">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 pb-3 border-l-4 {{ $match->status == 'ready' ? 'border-yellow-500' : 'border-red-500' }}">
                     <!-- Header: Serial & Title with Button -->
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
@@ -488,10 +499,10 @@ new class extends Component {
                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
                                 {{ $match->team1?->players?->first()->name ?? 'Player' }}
                             </span>
-                            @if ($match->is_doubles)                                
-                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
-                                {{ $match->team1?->players?->last()->name ?? 'Player' }}
-                            </span>
+                            @if ($match->is_doubles)
+                                <span class="text-gray-800 dark:text-white text-sm font-semibold">
+                                    {{ $match->team1?->players?->last()->name ?? 'Player' }}
+                                </span>
                             @endif
 
                         </div>
@@ -500,13 +511,13 @@ new class extends Component {
 
                         <!-- Player 2 -->
                         <div class="flex items-center justify-between">
-                           <span class="text-gray-800 dark:text-white text-sm font-semibold">
+                            <span class="text-gray-800 dark:text-white text-sm font-semibold">
                                 {{ $match->team2?->players?->first()->name ?? 'Player' }}
                             </span>
-                            @if ($match->is_doubles)                                
-                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
-                                {{ $match->team2?->players?->last()->name ?? 'Player' }}
-                            </span>
+                            @if ($match->is_doubles)
+                                <span class="text-gray-800 dark:text-white text-sm font-semibold">
+                                    {{ $match->team2?->players?->last()->name ?? 'Player' }}
+                                </span>
                             @endif
                         </div>
                     </div>

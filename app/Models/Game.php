@@ -74,7 +74,7 @@ class Game extends Model
         return $this->hasMany(GameScore::class);
     }
 
-    public function events()
+    public function gameevents()
     {
         return $this->hasMany(GameEvent::class);
     }
