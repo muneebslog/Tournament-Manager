@@ -104,9 +104,21 @@ new class extends Component {
 
         $this->getData();
 
+        $this->resetprops();
         // Flux::toast('Player saved successfully! ⚡')->success();
         Flux::modal('manage-player')->close();
+
         $this->dispatch('player-saved');
+    }
+
+    public function resetprops()
+    {
+        $this->player_id = null;
+        $this->name = '';
+        $this->phone = '';
+        $this->subtext = '';
+        $this->ranking = null;
+        $this->existing_pic = null;
     }
 };
 ?>
@@ -152,11 +164,11 @@ new class extends Component {
                                             Add Players
                                         </a>
                                     </flux:modal.trigger>
-                                        <a wire:navigate href="{{ route('event.matches', $event->id) }}">
-                                            <flux:button variant="primary" type="button">
-                                                Manage Matches
-                                            </flux:button>
-                                        </a>
+                                    <a wire:navigate href="{{ route('event.matches', $event->id) }}">
+                                        <flux:button variant="primary" type="button">
+                                            Manage Matches
+                                        </flux:button>
+                                    </a>
 
 
 

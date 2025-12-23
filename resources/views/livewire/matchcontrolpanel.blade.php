@@ -17,7 +17,7 @@ new class extends Component {
     public $roundWinner;
     public $startButton;
     public $winnerName;
-    public $lastround=false;
+    public $lastround = false;
     public $manualEventPlayer;
     public $manualEventType;
 
@@ -39,7 +39,7 @@ new class extends Component {
             $this->modal = true;
             $this->roundWinner = $this->match->winner_team_id;
             // dd($this->roundWinner);
-            $this->lastround=true;
+            $this->lastround = true;
         }
     }
 
@@ -63,16 +63,16 @@ new class extends Component {
 
     public function increaseScore($team)
     {
-        
+
         if ($team == 'team1') {
-            $this->round->team1_score += 1; 
-            
+            $this->round->team1_score += 1;
+
         } elseif ($team == 'team2') {
             $this->round->team2_score += 1;
         }
         $this->round->save();
-        
-        $this->logEvent('point', $team=='team1'?$this->match->team1->name . ' scored +1':$this->match->team2->name . ' scored +1');
+
+        $this->logEvent('point', $team == 'team1' ? $this->match->team1->name . ' scored +1' : $this->match->team2->name . ' scored +1');
         $this->WinnerCheck();
 
         // Example inside increaseScore() after saving
@@ -87,7 +87,7 @@ new class extends Component {
             $this->round->team2_score -= 1;
         }
         $this->round->save();
-         $this->logEvent('point_deduction', $team=='team1'?$this->match->team1->name . ' scored -1':$this->match->team2->name . ' scored -1');
+        $this->logEvent('point_deduction', $team == 'team1' ? $this->match->team1->name . ' scored -1' : $this->match->team2->name . ' scored -1');
     }
 
     public function WinnerCheck()
@@ -108,16 +108,16 @@ new class extends Component {
                 // We have a winner
                 $winner_id = $p1 > $p2 ? $this->match->team1_id : $this->match->team2_id;
                 $this->EndRound($winner_id);
-                $this->logEvent('winner', 'Round ' . $this->round->set_number . ' won by ' . $this->winnerName);
                 $this->showcontrolpanel = false;
                 $this->modal = true;
                 $this->roundWinner = $winner_id;
                 if ($this->match->is_doubles) {
-                $this->winnerName = $winner_id == $this->match->team1_id ? $this->match->team1->players->first()->name.'&'.$this->match->team1->players->last()->name : $this->match->team2->players->first()->name.'&'.$this->match->team2->players->last()->name;
-                }
-                else {
+                    $this->winnerName = $winner_id == $this->match->team1_id ? $this->match->team1->players->first()->name . '&' . $this->match->team1->players->last()->name : $this->match->team2->players->first()->name . '&' . $this->match->team2->players->last()->name;
+                } else {
                     $this->winnerName = $winner_id == $this->match->team1_id ? $this->match->team1->players->first()->name : $this->match->team2->players->first()->name;
                 }
+                $this->logEvent('winner', 'Round ' . $this->round->set_number . ' won by ' . $this->winnerName);
+
             }
         }
     }
@@ -140,7 +140,7 @@ new class extends Component {
         $hasTwoConsecutiveWins = false;
 
         // Get last two winners to check for consecutive wins
-        if ($this->match->team1_points >= 2 && $this->match->team2_points == 0) {
+        if ($this->match->team1_points >= 2 && $this->match->team2_points == 0 || $this->match->team2_points >= 2 && $this->match->team1_points == 0) {
             $hasTwoConsecutiveWins = true;
         }
 
@@ -155,7 +155,7 @@ new class extends Component {
                 'winner_team_id' => $winner_id,
                 'end_time' => now(),
             ]);
-            $this->lastround=true;
+            $this->lastround = true;
 
 
 
@@ -211,13 +211,13 @@ new class extends Component {
         // dd($val);
         $player = Player::find($this->manualEventPlayer);
         if ($this->manualEventType == 'red_card') {
-            $desc = "Player" .''. $player->name . ' has Gotten Red Card 🟥';
+            $desc = "Player" . '' . $player->name . ' has Gotten Red Card 🟥';
         } elseif ($this->manualEventType == 'yellow_card') {
-            $desc = "Player" .''. $player->name . ' has Gotten Yellow Card 🟨';
+            $desc = "Player" . '' . $player->name . ' has Gotten Yellow Card 🟨';
         } elseif ($this->manualEventType == 'injury') {
-            $desc = "Player" .''. $player->name . ' has Gotten Injured';
+            $desc = "Player" . '' . $player->name . ' has Gotten Injured';
         }
-        $this->logEvent($this->manualEventType,  $desc, $this->manualEventPlayer);
+        $this->logEvent($this->manualEventType, $desc, $this->manualEventPlayer);
     }
 
 
@@ -294,7 +294,7 @@ new class extends Component {
             <div
                 class="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-8 py-6 shadow-lg">
                 <div class="text-center mb-8">
-                   <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
                         {{ $match->team2->players->first()->name }}
                         @if ($match->is_doubles)
                             & {{ $match->team2->players->last()->name }}
@@ -359,15 +359,21 @@ new class extends Component {
                         <flux:select.option value="{{ $match->team1->players->first()->id }}">
                             {{ $match->team1->players->first()->name }}
                         </flux:select.option>
-                        <flux:select.option value="{{ $match->team1->players->last()->id }}">
-                            {{ $match->team1->players->last()->name }}
-                        </flux:select.option>
+                        @if ($match->is_doubles)
+                            <flux:select.option value="{{ $match->team1->players->last()->id }}">
+                                {{ $match->team1->players->last()->name }}
+                            </flux:select.option>
+                        @endif
+                        
                         <flux:select.option value="{{ $match->team2->players->first()->id }}">
                             {{ $match->team2->players->first()->name }}
                         </flux:select.option>
+                        @if ($match->is_doubles)
+
                         <flux:select.option value="{{ $match->team2->players->last()->id }}">
                             {{ $match->team2->players->last()->name }}
                         </flux:select.option>
+                        @endif
                     </flux:select>
                     <flux:button wire:click="logManualEvent" class=" w-full">Log</flux:button>
 
@@ -420,10 +426,11 @@ new class extends Component {
             @endif
             @if ($lastround)
                 <div class="flex gap-4 items-center">
-                    <flux:button wire:navigate href="{{ route('event.matches', $match->event->id) }}">Back To Matches</flux:button>
+                    <flux:button wire:navigate href="{{ route('event.matches', $match->event->id) }}">Back To Matches
+                    </flux:button>
                     <flux:button wire:navigate href="{{ route('match.details', $match->id) }}">See Details</flux:button>
                 </div>
-               
+
 
             @endif
 

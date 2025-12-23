@@ -14,9 +14,7 @@ new class extends Component {
      <!-- ========== HEADER ========== -->
     <div class="relative overflow-hidden ">
         <div class="relative z-10 mt-3 max-w-6xl mx-auto px-6  pt-0">
-            <div wire:click="openModal" class=" absolute top-2 right-4 ">
-                <flux:icon.pencil-square variant="mini" />
-            </div>
+            
             <!-- Logo and name Section -->
             <div class="flex flex-col lg:flex-row lg:items-center lg:gap-8 mb-10">
                 <!-- Logo -->

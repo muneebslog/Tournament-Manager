@@ -15,7 +15,9 @@ new
     public function mount()
     {
         $this->events = Event::has('games')->get();
-        $this->showMatches($this->events->first()->id);
+        if ($this->events->isNotEmpty()) {
+            $this->showMatches($this->events->first()->id);
+        }
     }
 
     public function showMatches($id)
@@ -25,7 +27,7 @@ new
             ->whereNotNull('team2_id')
             ->orderBy('created_at', 'desc')
             ->get();
-            // dd($this->matches[0]);
+        // dd($this->matches[0]);
     }
 }; ?>
 
@@ -385,7 +387,7 @@ new
             <h2 class="section-title">Matches</h2>
             <div class="matches-grid">
                 <!-- Completed Match -->
-               
+
                 @if ($matches)
                     @foreach ($matches as $match)
 

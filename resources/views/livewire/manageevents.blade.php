@@ -86,10 +86,10 @@ new class extends Component {
             class="relative max-w-7xl w-full flex flex-wrap lg:grid lg:grid-cols-12 basis-full items-center px-4 md:px-6 lg:px-8 mx-auto">
             <div class="lg:col-span-3 flex items-center">
                 <!-- Logo -->
-                <a class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-hidden focus:opacity-80"
+                <div class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-hidden focus:opacity-80"
                     href="index.html" aria-label="Preline">
                     Manage Events
-                </a>
+                </div>
                 <!-- End Logo -->
 
                 <div class="ms-1 sm:ms-2">

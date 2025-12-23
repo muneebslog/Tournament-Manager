@@ -65,11 +65,16 @@ new class extends Component {
         $playersCount = $this->numberOfPlayers;
 
         // ✔ VALIDATION 1: Players must be a power of 2 AND >= 8
-        $allowedPlayers = [8, 16, 32, 64, 128];
-        if (!in_array($playersCount, $allowedPlayers)) {
-            session()->flash('error', 'Players must be 8, 16, 32, 64, or 128.');
+        if ($playersCount < 8) {
+            session()->flash('error', 'There must be at least 8 players.');
             return;
         }
+        $playersCount = max(8, $playersCount); // Minimum 8 players
+
+        // Round to nearest higher power of 2
+        $roundedPlayers = pow(2, ceil(log($playersCount, 2)));
+
+        $playersCount = $roundedPlayers;
 
         // ✔ VALIDATION 2: Check if matches already created for this event
         $existingMatches = Game::where('event_id', $this->event->id)->count();
@@ -431,9 +436,10 @@ new class extends Component {
                             </span>
                             <div class=" flex gap-2">
 
+
                                 @foreach ($match->scores as $round)
                                     <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
-                                        <span class="font-medium text-sm"> {{ $round->player1_score }}</span>
+                                        <span class="font-medium text-sm"> {{ $round->team1_score }}</span>
 
                                     </div>
                                 @endforeach
@@ -451,7 +457,7 @@ new class extends Component {
 
                                 @foreach ($match->scores as $round)
                                     <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
-                                        <span class="font-medium text-sm"> {{ $round->player2_score }}</span>
+                                        <span class="font-medium text-sm"> {{ $round->team2_score }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -467,7 +473,10 @@ new class extends Component {
                         </span>
                         <p>📍 Court #{{ $match->court_number ?? 'N/A' }}</p>
                     </div>
-
+                    <div class=" flex justify-end items-center mt-3 ">
+                        <flux:button wire:navigate href="{{ route('match.details', $match->id) }}" class=" ">See Details
+                        </flux:button>
+                    </div>
 
                 </div>
 

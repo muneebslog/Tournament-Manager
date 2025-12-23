@@ -319,9 +319,9 @@ new class extends Component {
                                     <div class="w-4 h-4 rounded-full bg-yellow-500 mt-1.5"></div>
                                 </div>
                                 <div class="pt-1 flex-1">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Match Winner - Malik Ahmed
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white capitalize">{{ $event->description }}
                                     </p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">2 Sets to 0 | 3:15 PM</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">  {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs font-semibold mt-2">WINNER</span>
                                 </div>
