@@ -31,18 +31,20 @@ new class extends Component {
 
     public function mount(Event $eventid)
     {
-        $this->event = $eventid;
-        $this->event = $eventid->load('players', 'rounds');
+        $this->event = $eventid->load('players', 'rounds.games');
+
         $this->players = $this->event->players ?? collect();
         $this->rounds = $this->event->rounds ?? collect();
-        // dd($this->players);
-        // dd($this->rounds);
-        $this->round = $this->rounds[0] ?? collect();
-        $this->matches = $this->round->games ?? collect();
-        $this->numberOfPlayers = $this->players->count();
-        // dd($this->player1_id);
 
+        // Safely fetch first round (or null)
+        $this->round = $this->rounds->first();
+
+        // Safely fetch matches (empty collection if no rounds exist)
+        $this->matches = $this->round?->games ?? collect();
+
+        $this->numberOfPlayers = $this->players->count();
     }
+
 
     public function getList()
     {
@@ -347,7 +349,7 @@ new class extends Component {
         class="flex flex-wrap  sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 px-3 dark:bg-neutral-800">
         <nav class="max-w-[85rem] w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between">
             <a class="flex-none font-semibold text-xl text-black focus:outline-hidden focus:opacity-80 dark:text-white"
-                href="#" aria-label="Brand">{{ $round->name }}</a>
+                href="#" aria-label="Brand">{{ $round->name ?? 'No Rounds' }}</a>
             <div class="flex flex-row items-center gap-3 mt-5 sm:justify-end sm:mt-0 sm:ps-5">
                 @foreach ($rounds as $round)
                     <flux:button wire:click="getRound({{ $round->id }})">{{ $round->name }}</flux:button>
@@ -413,7 +415,7 @@ new class extends Component {
                         <div class="flex items-center gap-3">
 
                             <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                {{ $match->title }}
+                                {{ $match->name }}
                             </span>
                         </div>
 
@@ -425,15 +427,15 @@ new class extends Component {
                         <!-- Player 1 -->
                         <div class="flex items-center justify-between">
                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
-                                {{ $match->player1->name ?? 'Player 1' }}{{ $match->winner_id == $match->player1_id ? '👑' : '' }}
+                                {{ $match->team1->name ?? 'Player 1' }}{{ $match->winner_team_id == $match->team1_id ? '👑' : '' }}
                             </span>
                             <div class=" flex gap-2">
 
                                 @foreach ($match->scores as $round)
                                     <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
                                         <span class="font-medium text-sm"> {{ $round->player1_score }}</span>
-                                    </div>
 
+                                    </div>
                                 @endforeach
                             </div>
                         </div>
@@ -443,16 +445,15 @@ new class extends Component {
                         <!-- Player 2 -->
                         <div class="flex items-center justify-between">
                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
-                                {{ $match->player2->name ?? 'Player 2' }}{{ $match->winner_id == $match->player2_id ? '👑' : '' }}
+                                {{ $match->team2->name ?? 'Player 2' }}{{ $match->winner_team_id == $match->team2_id ? '👑' : '' }}
                             </span>
                             <div class=" flex gap-2">
 
-                                {{-- @foreach ($match->rounds as $round)
-                                <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
-                                    <span class="font-medium text-sm"> {{ $round->player2_score }}</span>
-                                </div>
-
-                                @endforeach --}}
+                                @foreach ($match->scores as $round)
+                                    <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-1 rounded mb-2">
+                                        <span class="font-medium text-sm"> {{ $round->player2_score }}</span>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -462,7 +463,7 @@ new class extends Component {
                     <div class="text-sm text-gray-500 flex justify-between dark:text-gray-400">
                         <span
                             class="text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                            {{ $match->match_serial_number }}
+                            {{ $match->id }}
                         </span>
                         <p>📍 Court #{{ $match->court_number ?? 'N/A' }}</p>
                     </div>
