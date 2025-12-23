@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('team1_id')->nullable()->constrained('teams')->onDelete('set null');
             $table->foreignId('team2_id')->nullable()->constrained('teams')->onDelete('set null');
             $table->foreignId('winner_team_id')->nullable()->constrained('teams')->onDelete('set null');
-            $table->enum('status', ['pending', 'running','ready', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending','ready','ongoing', 'completed', 'cancelled'])->default('pending');
             $table->boolean('is_doubles')->default(false);
             $table->integer('bestof')->default(3);
             $table->string('service_judge_name')->nullable();
