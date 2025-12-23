@@ -13,6 +13,7 @@ class GameEvent extends Model
         'tag',
         'team1_points_at_event',
         'team2_points_at_event',
+        'player_id',
     ];
 
     public function game()
