@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\GameMatch;
+use App\Models\Game;
 use App\Models\Event;
 use App\Models\Player;
 use Carbon\Carbon;
@@ -23,11 +23,11 @@ new class extends Component {
 
 
 
-    public function mount(GameMatch $match)
+    public function mount(Game $match)
     {
         $this->match = $match;
         $this->sets = $this->match->max_rounds;
-        $this->round = $this->match->rounds()->latest()->first();
+        $this->round = $this->match->scores()->latest()->first();
         if ($this->round == null) {
             $this->modal = true;
             $this->startButton = true;
@@ -46,10 +46,10 @@ new class extends Component {
         $this->match->status = "ongoing";
         $this->match->shuttles_used = 1;
         $this->match->save();
-        $this->round = $this->match->rounds()->create([
+        $this->round = $this->match->scores()->create([
             'status' => 'ongoing',
             'started_at' => now(),
-            'round_number' => ($this->match->rounds()->count() + 1),
+            'round_number' => ($this->match->scores()->count() + 1),
             'player1_score' => 0,
             'player2_score' => 0,
         ]);

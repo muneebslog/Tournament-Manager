@@ -8,6 +8,8 @@ class Game extends Model
 {
      protected $fillable = [
         'event_id',
+        'shuttles_used',
+        'match_serial_number',
         'round_id',
         'name',
         'team1_id',

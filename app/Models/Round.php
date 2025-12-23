@@ -10,6 +10,7 @@ class Round extends Model
         'event_id',
         'name',
         'round_number',
+        'matches'
     ];
 
     public function event()
