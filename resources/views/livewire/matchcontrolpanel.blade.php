@@ -166,7 +166,7 @@ new class extends Component {
         }
     }
 
-    public function logEvent($eventType, $description)
+    public function logEvent($eventType, $description, $player_id = null)
     {
         GameEvent::create([
             'game_id' => $this->match->id,
@@ -174,6 +174,7 @@ new class extends Component {
             'description' => $description,
             'team1_points_at_event' => $this->round->team1_score,
             'team2_points_at_event' => $this->round->team2_score,
+            'player_id' => $player_id,
         ]);
 
     }
@@ -207,13 +208,13 @@ new class extends Component {
         // dd($val);
         $player = Player::find($this->manualEventPlayer);
         if ($this->manualEventType == 'red_card') {
-            $desc = "Player" . $player->name . 'has Gotten Red Card 🟥';
+            $desc = "Player" .''. $player->name . ' has Gotten Red Card 🟥';
         } elseif ($this->manualEventType == 'yellow_card') {
-            $desc = "Player" . $player->name . 'has Gotten Yellow Card 🟨';
+            $desc = "Player" .''. $player->name . ' has Gotten Yellow Card 🟨';
         } elseif ($this->manualEventType == 'injury') {
-            $desc = "Player" . $player->name . 'has Gotten Injured';
+            $desc = "Player" .''. $player->name . ' has Gotten Injured';
         }
-        $this->logEvent($this->manualEventType, $this->manualEventPlayer, $desc);
+        $this->logEvent($this->manualEventType,  $desc, $this->manualEventPlayer);
     }
 
 
@@ -352,17 +353,17 @@ new class extends Component {
                     </flux:radio.group>
                     <flux:select wire:model="manualEventPlayer" class=" flex">
                         <flux:select.option>Choose Player</flux:select.option>
-                        <flux:select.option value="{{ $match->team1->players[0]->id }}">
-                            {{ $match->team1->players[0]->name }}
+                        <flux:select.option value="{{ $match->team1->players->first()->id }}">
+                            {{ $match->team1->players->first()->name }}
                         </flux:select.option>
-                        <flux:select.option value="{{ $match->team1->players[0]->id }}">
-                            {{ $match->team1->players[0]->name }}
+                        <flux:select.option value="{{ $match->team1->players->last()->id }}">
+                            {{ $match->team1->players->last()->name }}
                         </flux:select.option>
-                        <flux:select.option value="{{ $match->team2->players[0]->id }}">
-                            {{ $match->team2->players[0]->name }}
+                        <flux:select.option value="{{ $match->team2->players->first()->id }}">
+                            {{ $match->team2->players->first()->name }}
                         </flux:select.option>
-                        <flux:select.option value="{{ $match->team2->players[0]->id }}">
-                            {{ $match->team2->players[0]->name }}
+                        <flux:select.option value="{{ $match->team2->players->last()->id }}">
+                            {{ $match->team2->players->last()->name }}
                         </flux:select.option>
                     </flux:select>
                     <flux:button wire:click="logManualEvent" class=" w-full">Log</flux:button>
