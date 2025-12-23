@@ -188,7 +188,8 @@ new class extends Component {
                                     <div class="w-0.5 h-16 bg-gray-300 dark:bg-gray-600 my-2"></div>
                                 </div>
                                 <div class="pt-1 flex-1">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white capitalize">{{ $event->description }}</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white capitalize">
+                                        {{ $event->description }}</p>
                                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold mt-2">START_ROUND</span>
@@ -204,7 +205,9 @@ new class extends Component {
                                 </div>
                                 <div class="pt-1 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $event->description }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Score: {{ $event->team1_points_at_event }}-{{ $event->team2_points_at_event }} | {{ $event->created_at }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Score:
+                                        {{ $event->team1_points_at_event }}-{{ $event->team2_points_at_event }} |
+                                        {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-xs font-semibold mt-2">POINT</span>
                                 </div>
@@ -219,7 +222,8 @@ new class extends Component {
                                 </div>
                                 <div class="pt-1 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $event->description }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">New shuttle introduced | {{ $event->created_at }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">New shuttle introduced |
+                                        {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded text-xs font-semibold mt-2">SHUTTLE_CHANGE</span>
                                 </div>
@@ -234,7 +238,8 @@ new class extends Component {
                                 </div>
                                 <div class="pt-1 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $event->description }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Violation: Excessive appeals | {{ $event->created_at }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Violation: Excessive appeals |
+                                        {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded text-xs font-semibold mt-2">YELLOW_CARD</span>
                                 </div>
@@ -250,7 +255,8 @@ new class extends Component {
                                 <div class="pt-1 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $event->description }}
                                     </p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Reason: Racket throw | {{ $event->created_at }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Reason: Racket throw |
+                                        {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded text-xs font-semibold mt-2">POINT_DEDUCTION</span>
                                 </div>
@@ -265,7 +271,8 @@ new class extends Component {
                                 </div>
                                 <div class="pt-1 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $event->description }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Player Disqualified | {{ $event->created_at }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Player Disqualified |
+                                        {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded text-xs font-semibold mt-2">RED_CARD</span>
                                 </div>
@@ -297,7 +304,9 @@ new class extends Component {
                                 </div>
                                 <div class="pt-1 flex-1">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ $event->description }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Final Score: {{ $event->team1_points_at_event }}-{{ $event->team2_points_at_event }}  | {{ $event->created_at }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Final Score:
+                                        {{ $event->team1_points_at_event }}-{{ $event->team2_points_at_event }} |
+                                        {{ $event->created_at }}</p>
                                     <span
                                         class="inline-block px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded text-xs font-semibold mt-2">END_ROUND</span>
                                 </div>
@@ -325,10 +334,17 @@ new class extends Component {
 
         <!-- Action Buttons -->
         <div class="flex gap-4 mt-8 justify-end">
-            <button
+            <a href="{{ route('matches.report', $match->id) }}"
+                class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5.5 13a3 3 0 01-.369-5.98 5 5 0 119.753 1H7a3 3 0 00-1.5 5.98z"></path>
+                </svg>
+                Download PDF Report
+            </a>
+            {{-- <button
                 class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                 Print Report
-            </button>
+            </button> --}}
             <button
                 class="px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg font-semibold hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors">
                 Publish Match

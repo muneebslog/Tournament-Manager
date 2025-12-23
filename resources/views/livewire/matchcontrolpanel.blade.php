@@ -421,7 +421,7 @@ new class extends Component {
             @if ($lastround)
                 <div class="flex gap-4 items-center">
                     <flux:button wire:navigate href="{{ route('event.matches', $match->event->id) }}">Back To Matches</flux:button>
-                    <flux:button wire:navigate href="{{ route('event.matches', $match->event->id) }}">See Details</flux:button>
+                    <flux:button wire:navigate href="{{ route('match.details', $match->id) }}">See Details</flux:button>
                 </div>
                
 

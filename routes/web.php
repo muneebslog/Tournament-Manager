@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
+use Laravel\Fortify\Features;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MatchController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,6 +15,14 @@ Route::view('dashboard', 'dashboard')
 
 Volt::route('/scores', 'matchlist')->name('match.list');
 Volt::route('/score/{match}', 'scoreboard')->name('match.scoreboard');
+
+Route::middleware(['auth'])->group(function () {
+    // Match Details View
+    Route::get('/matches/{id}', [MatchController::class, 'show'])->name('matches.show');
+
+    // Generate PDF Report
+    Route::get('/matches/{id}/report', [MatchController::class, 'report'])->name('matches.report');
+});
 
 
 
