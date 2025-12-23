@@ -113,6 +113,8 @@ new class extends Component {
 
 
 <div>
+    <livewire:eventheader :event="$event" />
+
     <!-- Table Section -->
     <div class="max-w-[85rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-8 mx-auto">
         <!-- Card -->
@@ -136,11 +138,11 @@ new class extends Component {
 
                             <div>
                                 <div class="inline-flex gap-x-2">
-                                    
+
                                     <flux:modal.trigger name="manage-player">
 
-                                        <a class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                                            >
+                                        <a
+                                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-hidden focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
                                                 height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,6 +152,11 @@ new class extends Component {
                                             Add Players
                                         </a>
                                     </flux:modal.trigger>
+                                        <a wire:navigate href="{{ route('event.matches', $event->id) }}">
+                                            <flux:button variant="primary" type="button">
+                                                Manage Matches
+                                            </flux:button>
+                                        </a>
 
 
 
@@ -215,59 +222,59 @@ new class extends Component {
 
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                                 @forelse($this->players as $player)
-                                <tr>
+                                    <tr>
 
-                                    <td class="size-px whitespace-nowrap">
-                                        <div class="px-6 py-3">
-                                            <div class="flex items-center gap-x-3">
-                                                <img class="inline-block size-9.5 rounded-full"
-                                                    src="{{ Storage::url($player->pic) }}"
-                                                    alt="{{ $player->name }}s Avatar">
-                                                <div class="grow">
-                                                    <span
-                                                        class="block text-sm font-semibold text-gray-800 capitalize dark:text-neutral-200">{{ $player->name }}</span>
+                                        <td class="size-px whitespace-nowrap">
+                                            <div class="px-6 py-3">
+                                                <div class="flex items-center gap-x-3">
+                                                    <flux:avatar name="{{ $player->name }}"
+                                                        src="{{ $player->pic ? Storage::url($player->pic) : '' }}" />
+                                                    <div class="grow">
+                                                        <span
+                                                            class="block text-sm font-semibold text-gray-800 capitalize dark:text-neutral-200">{{ $player->name }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td class="size-px whitespace-nowrap">
-                                        <div class="px-6 py-3">
-                                            <span
-                                                class="block text-xs  text-gray-800 dark:text-neutral-200">{{ $player->subtext ?? 'N/A' }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="size-px whitespace-nowrap">
-                                        <div class="px-6 py-3">
-                                            <span
-                                                class="block text-xs font-semibold text-gray-800 dark:text-neutral-200">{{ $player->phone ?? 'N/A' }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="size-px whitespace-nowrap">
-                                        <div class="px-6 py-3">
-                                            <span
-                                                class="block text-xs  text-gray-800 dark:text-neutral-200">{{ $player->ranking ?? 'N/A' }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="size-px whitespace-nowrap">
-                                        <div class="px-6 py-3">
-                                            <span class="text-sm text-gray-500 dark:text-neutral-500">{{ Carbon\Carbon::parse($player->created_at)->format('d M, Y') }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="size-px whitespace-nowrap">
-                                        <div class="px-6 py-1.5">
-                                            <button type="button" wire:click="edit({{ $player->id }})" class="inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-blue-500"
-                                                >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td class="size-px whitespace-nowrap">
+                                            <div class="px-6 py-3">
+                                                <span
+                                                    class="block text-xs  text-gray-800 dark:text-neutral-200">{{ $player->subtext ?? 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="size-px whitespace-nowrap">
+                                            <div class="px-6 py-3">
+                                                <span
+                                                    class="block text-xs font-semibold text-gray-800 dark:text-neutral-200">{{ $player->phone ?? 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="size-px whitespace-nowrap">
+                                            <div class="px-6 py-3">
+                                                <span
+                                                    class="block text-xs  text-gray-800 dark:text-neutral-200">{{ $player->ranking ?? 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="size-px whitespace-nowrap">
+                                            <div class="px-6 py-3">
+                                                <span
+                                                    class="text-sm text-gray-500 dark:text-neutral-500">{{ Carbon\Carbon::parse($player->created_at)->format('d M, Y') }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="size-px whitespace-nowrap">
+                                            <div class="px-6 py-1.5">
+                                                <button type="button" wire:click="edit({{ $player->id }})"
+                                                    class="inline-flex items-center gap-x-1 text-sm text-blue-600 decoration-2 hover:underline focus:outline-hidden focus:underline font-medium dark:text-blue-500">
+                                                    Edit
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-neutral-400">
-                                        No players found.
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-neutral-400">
+                                            No players found.
+                                        </td>
+                                    </tr>
 
                                 @endforelse
                             </tbody>
@@ -279,7 +286,9 @@ new class extends Component {
                             class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200 dark:border-neutral-700">
                             <div>
                                 <p class="text-sm text-gray-600 dark:text-neutral-400">
-                                    <span class="font-semibold text-gray-800 dark:text-neutral-200">{{ count($event->players) }}</span> results
+                                    <span
+                                        class="font-semibold text-gray-800 dark:text-neutral-200">{{ count($event->players) }}</span>
+                                    results
                                 </p>
                             </div>
                         </div>

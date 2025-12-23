@@ -58,7 +58,7 @@ new class extends Component {
             ['id' => $this->event_id],
             [
                 'name' => $this->name,
-                'tournament_id'=>$this->tournament->id,
+                'tournament_id' => $this->tournament->id,
                 'logo_path' => $logoPath,
             ]
         );
@@ -70,7 +70,8 @@ new class extends Component {
         Flux::modal('generateEvents')->close();
         $this->mount();
     }
-    public function resetprops(){
+    public function resetprops()
+    {
         $this->event_id = null;
         $this->name = '';
         $this->logo = null;
@@ -142,20 +143,21 @@ new class extends Component {
             </div>
             <div class="flex">
                 <flux:spacer />
-                <flux:button wire:click="save"  variant="primary">Save changes</flux:button>
+                <flux:button wire:click="save" variant="primary">Save changes</flux:button>
             </div>
         </div>
     </flux:modal>
+    <!-- Grid -->
 
-    <div class=" grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
+    <!-- End Grid -->
+    <div class=" grid gap-5 grid-cols-1  md:grid-cols-2 lg:grid-cols-3 ">
         @forelse ($events as $event)
 
             <!-- Match Card 3 -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-5 border-l-4 border-yellow-500 relative">
+
+            {{-- <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-5 border-l-4 border-yellow-500 relative">
                 <div class="flex items-center gap-4">
-                    <a 
-                    href="{{ route('events.show', $event) }}"
-                     class="flex items-center gap-4 flex-1">
+                    <a href="{{ route('events.show', $event) }}" class="flex items-center gap-4 flex-1">
                         @if ($event->logo_path)
                             <flux:avatar size="lg" src="{{ Storage::url($event->logo_path) }}" />
                         @else
@@ -164,14 +166,14 @@ new class extends Component {
 
                         <div class="">
 
-                        <span class="text-gray-800 capitalize dark:text-white font-semibold">
-                            {{ $event->name }}
-                        </span>
-                        <div class="">
-                            <flux:text variant="muted" class="text-sm">
-                                {{ $event->tournament->name }}
-                            </flux:text>
-                        </div>
+                            <span class="text-gray-800 capitalize dark:text-white font-semibold">
+                                {{ $event->name }}
+                            </span>
+                            <div class="">
+                                <flux:text variant="muted" class="text-sm">
+                                    {{ $event->tournament->name }}
+                                </flux:text>
+                            </div>
                         </div>
 
                     </a>
@@ -181,7 +183,40 @@ new class extends Component {
                         <flux:icon.pencil-square variant="micro" />
                     </button>
                 </div>
+
+            </div> --}}
+            <!-- Grid -->
+
+            <!-- End Grid -->
+            <!-- Card -->
+          
+
+            <div class="p-4 border border-gray-200 rounded-lg dark:border-neutral-700">
+                <flux:avatar name="Caleb Porzio" src="{{$event->logo_path ? Storage::url($event->logo_path) : '' }}" />
+
+                
+
+                <p class="font-semibold capitalize mt-3 text-lg text-gray-800 dark:text-neutral-200">
+                    {{ $event->name }}
+                </p>
+
+                <p class="mt-1 text-sm text-gray-600 dark:text-neutral-400">
+                    {{ $event->description }}
+                </p>
+                <div class="">
+                    <div class="">
+                        <flux:button wire:navigate href="{{ route('event.matches', $event->id) }}" variant="primary" class="mt-4 w-full">
+                            Manage Event
+                        </flux:button>
+                    </div>
+                    <div class="">
+                        <button wire:navigate href="{{ route('event.players', $event->id) }}" type="button" class="mt-2 w-full text-gray-500 hover:text-yellow-500 border border-gray-300 rounded-lg px-4 py-2">
+                            Manage Players
+                        </button>
+                    </div>
+                </div>
             </div>
+            <!-- End Card -->
 
         @empty
             <div class="">

@@ -1,8 +1,8 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\GameMatch;
-use App\Models\TournamentEvent;
+use App\Models\Game;
+use App\Models\Event;
 use App\Models\Player;
 use Flux\Flux;
 
@@ -10,8 +10,8 @@ new class extends Component {
 
     public $event;
     public $numberOfPlayers;
-    public $matches;
-    public $players;
+    public $matches = [];
+    public $players = [];
     public $selectedMatchId;
     public $max_rounds = 1;
     public $player1_id;
@@ -19,43 +19,70 @@ new class extends Component {
     public $match_date;
     public $court_number;
 
-    public function mount(TournamentEvent $event)
+    public function mount(Event $eventid)
     {
-        $this->event = $event;
-        $this->players = $this->event->players;
-        $this->matches = $this->event->matches;
+        $this->event = $eventid;
+        $this->event = $eventid->load('players', 'games');
+        $this->players = $this->event->players ?? collect();
+        $this->matches = $this->event->games ?? collect();
+        $this->numberOfPlayers = $this->players->count();
         // dd($this->player1_id);
 
     }
 
-    public function generateMatches()
+    public function generateRoundsAndMatches()
     {
-        // Validate input
-        $this->validate([
-            'numberOfPlayers' => 'required|integer|min:2'
-        ]);
-        // Clear existing matches for that tournament (optional)
-        // GameMatch::where('tournament_id', $this->tournamentId)->delete();
+        $playersCount = $this->numberOfPlayers;
+        $totalRounds = (int) ceil(log($playersCount, 2));
 
-        // Generate matches
-        for ($i = 1; $i <= $this->numberOfPlayers; $i += 2) {
-            $player1 = "Player {$i}";
-            $player2 = "Player " . ($i + 1 <= $this->numberOfPlayers ? $i + 1 : 'Bye'); // handle odd player count
-            $serial = GameMatch::generateSerialNumber($this->event->id);
-
-
-            GameMatch::create([
-                'tournament_event_id' => $this->event->id,
-                'title' => "{$player1} vs {$player2}",
-                'match_serial_number' => $serial,
-            ]);
+        // Dynamic round names
+        $roundNames = [];
+        if ($totalRounds == 1) {
+            $roundNames = ['Final'];
+        } elseif ($totalRounds == 2) {
+            $roundNames = ['Semifinal', 'Final'];
+        } elseif ($totalRounds == 3) {
+            $roundNames = ['Quarterfinal', 'Semifinal', 'Final'];
+        } elseif ($totalRounds == 4) {
+            $roundNames = ['Round 1', 'Quarterfinal', 'Semifinal', 'Final'];
+        } elseif ($totalRounds == 5) {
+            $roundNames = ['Round 1', 'Round 2', 'Quarterfinal', 'Semifinal', 'Final'];
+        } else {
+            // 6 or more rounds
+            for ($i = 1; $i <= $totalRounds - 3; $i++) {
+                $roundNames[] = "Round $i";
+            }
+            $roundNames = array_merge($roundNames, ['Quarterfinal', 'Semifinal', 'Final']);
         }
 
-        // Optionally close the modal or show a success message
-        Flux::modal('generateMatches')->close();
-        $this->matches = $this->event->matches;
+        // Create rounds and matches
+        for ($i = 1; $i <= $totalRounds; $i++) {
+            $roundName = $roundNames[$i - 1] ?? "Round $i";
+            $matchesCount = (int) pow(2, $totalRounds - $i);
 
-        session()->flash('success', 'Matches generated successfully!');
+            $round = Round::create([
+                'name' => $roundName,
+                'round_number' => $i,
+                'matches_count' => $matchesCount,
+                'event_id' => $this->event->id,
+            ]);
+
+            if ($i == 1) {
+                # code...
+
+                for ($j = 1; $j <= $matchesCount; $j++) {
+                    Game::create([
+                        'round_id' => $round->id,
+                        'event_id' => $this->event->id,
+                        'player1_id' => null,
+                        'player2_id' => null,
+                    ]);
+                }
+            }
+
+        }
+
+        session()->flash('message', 'Rounds and matches created successfully!');
     }
 
 
@@ -63,16 +90,16 @@ new class extends Component {
 
     public function openMatch($id)
     {
-        $match = GameMatch::find($id);
+        $match = Game::find($id);
 
         if ($match) {
             $this->selectedMatchId = $match->id;
-            if($match->player1_id){
+            if ($match->player1_id) {
                 $this->player1_id = $match->player1_id;
                 $this->player2_id = $match->player2_id;
-            }else{
-                $this->player1_id=$this->players[0]->id;
-                $this->player2_id=$this->players[0]->id;
+            } else {
+                $this->player1_id = $this->players[0]->id;
+                $this->player2_id = $this->players[0]->id;
 
             }
             $this->match_date = \Carbon\Carbon::parse($match->match_date)->format('Y-m-d');
@@ -94,7 +121,7 @@ new class extends Component {
             'max_rounds' => 'required|integer|min:1',
         ]);
 
-        $match = GameMatch::find($this->selectedMatchId);
+        $match = Game::find($this->selectedMatchId);
 
         if ($match) {
             $match->update([
@@ -110,7 +137,7 @@ new class extends Component {
         Flux::modal('add-match')->close();
 
         // refresh list
-        // $this->matches = GameMatch::where('tournament_event_id', $this->tournamentId->id)->get();
+        // $this->matches = Game::where('tournament_event_id', $this->tournamentId->id)->get();
         $this->matches = $this->event->matches;
 
         session()->flash('success', 'Match updated successfully!');
@@ -121,6 +148,7 @@ new class extends Component {
 
 
 <div>
+    <livewire:eventheader :event="$event" />
     <!-- ========== HEADER ========== -->
     <header class="flex flex-wrap lg:justify-start lg:flex-nowrap z-50 w-fullx` py-7 pt-0">
         <nav
@@ -141,35 +169,20 @@ new class extends Component {
             <!-- Button Group -->
             <div class="flex items-center gap-x-1 lg:gap-x-2 ms-auto py-1 lg:ps-6 lg:order-3 lg:col-span-3">
                 <flux:modal.trigger name="generateMatches">
-
-                    <button type="button"
+                    <button type="button" wire:click="generateMatches"
                         class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium text-nowrap rounded-xl border border-transparent bg-yellow-400 text-black hover:bg-yellow-500 focus:outline-hidden focus:bg-yellow-500 transition disabled:opacity-50 disabled:pointer-events-none">
                         Generate Matches
                     </button>
                 </flux:modal.trigger>
+                <a wire:navigate href="{{ route('event.players', $event->id) }}">
+                    <flux:button variant="primary" type="button">
+                        Manage Players
+                    </flux:button>
+                </a>
 
 
 
-                {{-- <div class="">
-                    <button type="button"
-                        class="hs-collapse-toggle size-9.5 flex justify-center items-center text-sm font-semibold rounded-xl border border-gray-200 text-black hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
-                        id="hs-pro-hcail-collapse" aria-expanded="false" aria-controls="hs-pro-hcail"
-                        aria-label="Toggle navigation" data-hs-collapse="#hs-pro-hcail">
-                        <svg class="hs-collapse-open:hidden shrink-0 size-4" xmlns="http://www.w3.org/2000/svg"
-                            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" x2="21" y1="6" y2="6" />
-                            <line x1="3" x2="21" y1="12" y2="12" />
-                            <line x1="3" x2="21" y1="18" y2="18" />
-                        </svg>
-                        <svg class="hs-collapse-open:block hidden shrink-0 size-4" xmlns="http://www.w3.org/2000/svg"
-                            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6 6 18" />
-                            <path d="m6 6 12 12" />
-                        </svg>
-                    </button>
-                </div> --}}
+
             </div>
             <!-- End Button Group -->
 
@@ -186,22 +199,7 @@ new class extends Component {
         </nav>
     </header>
     <!-- ========== END HEADER ========== -->
-    <flux:modal name="generateMatches" class="md:w-96">
-        <form wire:submit.prevent="generateMatches" class="space-y-6">
-            <div>
-                <flux:heading size="lg">Generate Matches</flux:heading>
-                <flux:text class="mt-2">Enter the number of players to auto-generate matches.</flux:text>
-            </div>
 
-            <flux:input label="Number Of Players" type="number" placeholder="Number Of Players"
-                wire:model="numberOfPlayers" />
-
-            <div class="flex">
-                <flux:spacer />
-                <flux:button type="submit" variant="primary">Generate Matches</flux:button>
-            </div>
-        </form>
-    </flux:modal>
 
 
 
@@ -228,7 +226,7 @@ new class extends Component {
                         <!-- Player 1 -->
                         <div class="flex items-center justify-between">
                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
-                                {{ $match->player1->name ?? 'Player 1' }}{{ $match->winner_id==$match->player1_id ? '👑' : '' }}
+                                {{ $match->player1->name ?? 'Player 1' }}{{ $match->winner_id == $match->player1_id ? '👑' : '' }}
                             </span>
                             <div class=" flex gap-2">
 
@@ -246,7 +244,7 @@ new class extends Component {
                         <!-- Player 2 -->
                         <div class="flex items-center justify-between">
                             <span class="text-gray-800 dark:text-white text-sm font-semibold">
-                                {{ $match->player2->name ?? 'Player 2' }}{{ $match->winner_id==$match->player2_id ? '👑' : '' }}
+                                {{ $match->player2->name ?? 'Player 2' }}{{ $match->winner_id == $match->player2_id ? '👑' : '' }}
                             </span>
                             <div class=" flex gap-2">
 
@@ -259,7 +257,7 @@ new class extends Component {
                             </div>
                         </div>
                     </div>
-                 
+
 
                     <!-- Footer: Date & Court -->
                     <div class="text-sm text-gray-500 flex justify-between dark:text-gray-400">
@@ -273,7 +271,7 @@ new class extends Component {
 
                 </div>
 
-            @elseif ($match->status == null)
+            @elseif ($match->status == null || $match->status == 'pending')
                 <!-- Match Card Enhanced -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 pb-3 border-l-4 border-yellow-500">
                     <!-- Header: Serial & Title with Button -->
