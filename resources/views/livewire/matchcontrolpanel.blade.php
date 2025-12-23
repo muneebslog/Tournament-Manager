@@ -63,14 +63,16 @@ new class extends Component {
 
     public function increaseScore($team)
     {
+        
         if ($team == 'team1') {
-            $this->round->team1_score += 1;
+            $this->round->team1_score += 1; 
+            
         } elseif ($team == 'team2') {
             $this->round->team2_score += 1;
         }
         $this->round->save();
-        $id = $this->match->{$team}->id;
-        $this->logEvent('point', $team . ' scored +1');
+        
+        $this->logEvent('point', $team=='team1'?$this->match->team1->name . ' scored +1':$this->match->team2->name . ' scored +1');
         $this->WinnerCheck();
 
         // Example inside increaseScore() after saving
@@ -85,7 +87,7 @@ new class extends Component {
             $this->round->team2_score -= 1;
         }
         $this->round->save();
-        $this->logEvent('point_deduction', 'Player ' . $team . ' scored -1');
+         $this->logEvent('point_deduction', $team=='team1'?$this->match->team1->name . ' scored -1':$this->match->team2->name . ' scored -1');
     }
 
     public function WinnerCheck()
@@ -151,6 +153,7 @@ new class extends Component {
             $this->match->update([
                 'status' => 'completed',
                 'winner_team_id' => $winner_id,
+                'end_time' => now(),
             ]);
             $this->lastround=true;
 
@@ -326,7 +329,7 @@ new class extends Component {
                     @foreach ($this->events as $event)
                         <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <span class="text-gray-500 dark:text-gray-400 text-sm font-semibold">
-                                {{ Carbon::parse($event->timestamp)->diffForHumans() }}
+                                {{ Carbon::parse($event->created_at)->diffForHumans() }}
                             </span>
                             <div class="flex-1">
                                 <p class="text-gray-700 dark:text-gray-200 font-medium">

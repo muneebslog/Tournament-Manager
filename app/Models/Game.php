@@ -28,6 +28,11 @@ class Game extends Model
         'team2_points',
         'is_published',
     ];
+    protected $casts = [
+    'start_time' => 'datetime',
+    'end_time' => 'datetime',
+    'updated_at' => 'datetime',
+];
 
      public static function generateSerialNumber($eventId)
     {
